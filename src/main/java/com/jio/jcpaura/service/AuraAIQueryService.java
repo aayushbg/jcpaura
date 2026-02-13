@@ -100,9 +100,35 @@ public class AuraAIQueryService {
     private List<?> stepExecuteQuery(String mongoQuery) {
         try {
             // Try to determine if it's an aggregation or simple query
-            String cleanedQuery = mongoQuery.trim();
-
+            String trimmedQuery = mongoQuery.trim();
             // If it starts with '[', it's likely an aggregation pipeline
+
+            String cleanedQuery = "";
+            int start = 0;
+            int last = trimmedQuery.length() - 1;
+
+            for(int i = 0 ; i < trimmedQuery.length() ; i++) {
+                char c = trimmedQuery.charAt(i);
+                if(c == '{' || c == '[') {
+                    start = i;
+                    break;
+                }
+            }
+
+            for(int i = trimmedQuery.length() - 1 ; i >= 0 ; i--) {
+                char c = trimmedQuery.charAt(i);
+                if(c == '}' || c == ']') {
+                    last = i;
+                    break;
+                }
+            }
+
+            if (start <= last) {
+                cleanedQuery = trimmedQuery.substring(start, last + 1);
+            } else {
+                cleanedQuery = trimmedQuery;
+            }
+
             if (cleanedQuery.startsWith("[")) {
                 List<Document> results = metricsService.executeAggregation(cleanedQuery);
                 return results;
